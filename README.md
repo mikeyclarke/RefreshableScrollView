@@ -48,7 +48,10 @@ class MyViewController: NSViewController {
         let scrollView = RefreshableScrollView()
         scrollView.documentView = // …
 
-        let refreshControl = ProgressIndicatorRefreshControl(target: self, action: #selector(refreshControlInvoked(_:)))
+        let refreshControl = ProgressIndicatorRefreshControl(
+            target: self,
+            action: #selector(refreshControlInvoked(_:))
+        )
         scrollView.refreshControl = refreshControl
 
         self.view = scrollView
@@ -91,7 +94,7 @@ accordingly
 - `willDeactivate() async` - this method is called at the start of the deactivation process. It is asynchronous to give
 you the ability to perform animations (using the async variant of [`runAnimationGroup(_:completionHandler:)`](https://developer.apple.com/documentation/appkit/nsanimationcontext/1529847-runanimationgroup))
 before the refresh control is hidden again. You could instead perform your animation in your consuming code before
-calling `endRefreshing()` but this method enables you to confine all of your UI code to your control class.<br><br>At
+calling `endRefreshing()` but this method enables you to confine all of your UI code to your control class. At
 the conclusion of this method `stateDidChange(from:to:)` will be called.
 
 Whilst you’ll almost certainly need to override `stateDidChange(from:to:)`, you’ll only need to use `willDeactivate` if
