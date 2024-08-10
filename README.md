@@ -30,7 +30,7 @@ Or through the Xcode UI:
 - Enter the URL of this repository: `https://github.com/mikeyclarke/RefreshableScrollView.git`
 - Choose "Up To Next Major Version": 1.0.0
 
-# Usage
+## Usage
 
 First you’ll want to use (or subclass if you wish) `RefreshableScrollView` instead of `NSScrollView`. Then you’ll want
 to assign a control to its `refreshControl` property.
@@ -80,7 +80,7 @@ class MyViewController: NSViewController {
 - `endRefreshing()` tells the control that a refresh operation has ended
 - `isRefreshing` is a boolean value indicating whether a refresh operation has been triggered and is in progress
 
-## Building a custom refresh control
+### Building a custom refresh control
 
 If you’re not satisfied with the default progress indicator-based UI then you can instead create your own. To do this
 you’ll need to subclass `RefreshControl`. It is recommended that you take a look at the implementation of
@@ -104,7 +104,7 @@ of both methods are empty so you do not need to call `super`.
 `stateDidChange(from:to:)` is called with the previous and current `RefreshControl.State`, which can also be read at any
 time through the `state` property of a control. There are four different states.
 
-### States
+#### States
 
 - Idle - the refresh control is not visible at all.
 - Triggering - the refresh control is visible and the scroll view is being scrolled up or down. This state has an
@@ -116,7 +116,7 @@ returning to the idle state. As noted above, the control’s async `willDeactiva
 and the control will not return to idle until that method has concluded, giving you the opportunity to perform clean-up
 animations.
 
-### Design considerations
+#### Design considerations
 
 Scrolling is monitored by observing `NSView.boundsDidChangeNotification` notifications. These notifications are throttled
 by AppKit and so you should not assume that the triggering progress will increment or decrement smoothly. In fact, it is
