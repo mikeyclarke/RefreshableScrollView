@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24127" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24128" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24127"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24128"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication"/>
@@ -604,6 +604,7 @@
                     <menu key="submenu" title="View" id="HyV-fh-RgO">
                         <items>
                             <menuItem title="Refresh" enabled="NO" keyEquivalent="r" identifier="viewRefresh" id="hzE-dA-cn8"/>
+                            <menuItem title="Refresh Without Revealing" enabled="NO" keyEquivalent="R" identifier="viewRefreshNoReveal" id="zYa-zQ-Ngz"/>
                             <menuItem isSeparatorItem="YES" id="4m9-An-p3Z"/>
                             <menuItem title="Enter Full Screen" keyEquivalent="f" id="4J7-dP-txa">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>

@@ -28,7 +28,7 @@ class ViewController: NSViewController {
 
         super.init(nibName: nil, bundle: nil)
 
-        self.observeMenuItem()
+        self.observeMenuItems()
     }
 
     required init(coder: NSCoder) {
@@ -66,20 +66,20 @@ class ViewController: NSViewController {
         )
     }
 
-    private func observeMenuItem() {
-        guard let mainMenu = NSApp.mainMenu else {
+    private func observeMenuItems() {
+        guard let viewSubmenu = NSApp.mainMenu?.item(with: .init(rawValue: "view"))?.submenu else {
             return
         }
 
-        guard
-            let viewSubmenu = mainMenu.item(with: .init(rawValue: "view"))?.submenu,
-            let item = viewSubmenu.item(with: .init(rawValue: "viewRefresh"))
-        else {
-            return
+        if let item = viewSubmenu.item(with: .init(rawValue: "viewRefresh")) {
+            item.target = self
+            item.action = #selector(didTriggerRefreshMenuItem(_:))
         }
 
-        item.target = self
-        item.action = #selector(didTriggerRefreshMenuItem(_:))
+        if let item = viewSubmenu.item(with: .init(rawValue: "viewRefreshNoReveal")) {
+            item.target = self
+            item.action = #selector(didTriggerRefreshWithoutRevealMenuItem(_:))
+        }
     }
 
     private func prependItem(title: String, subtitle: String, color: NSColor = .systemBlue) {
@@ -120,6 +120,17 @@ class ViewController: NSViewController {
 
         if !control.isRefreshing {
             control.beginRefreshing()
+            self.performRefresh()
+        }
+    }
+
+    @objc private func didTriggerRefreshWithoutRevealMenuItem(_ sender: NSMenuItem) {
+        guard let scrollView = self.view as? RefreshableScrollView, let control = scrollView.refreshControl else {
+            return
+        }
+
+        if !control.isRefreshing {
+            control.beginRefreshing(revealingControl: false)
             self.performRefresh()
         }
     }

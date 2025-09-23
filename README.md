@@ -80,6 +80,11 @@ class MyViewController: NSViewController {
 - `endRefreshing()` tells the control that a refresh operation has ended
 - `isRefreshing` is a boolean value indicating whether a refresh operation has been triggered and is in progress
 
+Unlike `UIRefreshControl`, the `beginRefreshing` method of `RefreshControl` takes an optional `revealingControl` argument
+which determines whether or not the refresh control should be forced into view when programmatically refreshing. Passing
+`false` allows the refresh to occur silently without disturbing the user whilst still showing the activated state if they
+manually reveal it. This option defaults to `true` which provides the same behavior as `UIRefreshControl`.
+
 ### Building a custom refresh control
 
 If you’re not satisfied with the default progress indicator-based UI then you can instead create your own. To do this

@@ -29,6 +29,19 @@ open class RefreshControl: NSControl {
     private var previousScrollViewOffset: CGPoint = .zero
     private var didBeginScrollNearToTop: Bool = true
     private var lastDeactivationTime: Date?
+    private var isControlLocked: Bool = false
+
+    private var distanceFromSafeArea: CGFloat? {
+        guard let scrollView = self.enclosingScrollView else {
+            return nil
+        }
+
+        return self.previousScrollViewOffset.y + scrollView.contentInsets.top
+    }
+
+    var height: CGFloat {
+        return self.frame.size.height
+    }
 
     public var canRefresh: Bool {
         if !self.didBeginScrollNearToTop {
@@ -51,7 +64,6 @@ open class RefreshControl: NSControl {
             switch self.state {
             case .activated:
                 if !previousState.isActivated {
-                    scrollView.contentInsets.top += self.height
                     self.stateDidChange(from: previousState, to: self.state)
                 }
             case .deactivating:
@@ -70,10 +82,6 @@ open class RefreshControl: NSControl {
 
     public var isRefreshing: Bool {
         return if case .activated = self.state { true } else { false }
-    }
-
-    var height: CGFloat {
-        return self.frame.size.height
     }
 
     deinit {
@@ -114,12 +122,16 @@ open class RefreshControl: NSControl {
 
     open func stateDidChange(from previousState: State, to newState: State) {}
 
-    public func beginRefreshing() {
+    public func beginRefreshing(revealingControl lockControl: Bool = true) {
         guard self.isEnabled, !self.state.isActivated else {
             return
         }
 
         self.state = .activated
+
+        if lockControl {
+            self.lockControlInView()
+        }
     }
 
     public func endRefreshing() {
@@ -156,8 +168,16 @@ open class RefreshControl: NSControl {
             self.previousScrollViewOffset.y = 0
         }
 
+        self.isControlLocked = false
         self.state = .idle
         self.lastDeactivationTime = Date.now
+    }
+
+    private func lockControlInView() {
+        if let scrollView = self.enclosingScrollView {
+            scrollView.contentInsets.top = scrollView.safeAreaInsets.top + self.height
+            self.isControlLocked = true
+        }
     }
 
     @objc private func didStartScrolling(_ notification: Notification) {
@@ -169,28 +189,50 @@ open class RefreshControl: NSControl {
         self.didBeginScrollNearToTop = offset < (scrollView.contentSize.height / 3)
     }
 
-    @objc private func clipViewBoundsChanged(_ notification: Notification) {
-        guard
-            let scrollView = self.enclosingScrollView,
-            !self.state.isActivated,
-            !self.state.isDeactivating
-        else {
+    private func lockControlIfFullyRevealed() {
+        guard let distanceFromSafeArea = self.distanceFromSafeArea else {
             return
         }
 
-        let refreshViewHeight = self.height
-        let offset = self.previousScrollViewOffset.y + scrollView.contentInsets.top
+        if distanceFromSafeArea < -self.height {
+            self.lockControlInView()
+        }
+    }
 
-        switch offset {
-        case ..<(-refreshViewHeight) where self.canRefresh:
+    private func updateStateAfterScroll() {
+        guard let distanceFromSafeArea = self.distanceFromSafeArea else {
+            return
+        }
+
+        switch distanceFromSafeArea {
+        case ..<(-self.height) where self.canRefresh:
             self.state = .activated
+            self.lockControlInView()
             if let action = self.action, let target = self.target {
                 self.sendAction(action, to: target)
             }
         case ..<0:
-            self.state = .triggering(progress: (-offset / refreshViewHeight))
+            self.state = .triggering(progress: (-distanceFromSafeArea / self.height))
         default:
             self.state = .idle
+        }
+    }
+
+    @objc private func clipViewBoundsChanged(_ notification: Notification) {
+        guard let scrollView = self.enclosingScrollView else {
+            return
+        }
+
+        switch self.state {
+        case .deactivating:
+            return
+        case .activated:
+            guard !self.isControlLocked else {
+                return
+            }
+            self.lockControlIfFullyRevealed()
+        case .triggering, .idle:
+            self.updateStateAfterScroll()
         }
 
         self.previousScrollViewOffset.y = scrollView.documentVisibleRect.minY
