@@ -134,6 +134,17 @@ concluded quickly enough. The boolean `canRefresh` property can be used to check
 during a scroll event. The `ProgressIndicatorRefreshControl` for example clamps the visibility of the indicator at 50%
 if `canRefresh` is false to communicate that pull to refresh exists but that a new scroll is required to activate it.
 
+As of macOS Tahoe toolbars no longer have a background and so the refresh control will be visible underneath the toolbar
+area. To solve this a crude masking mechanism is built into the refresh control and can be controlled with the
+`masksToSafeArea` property. Since this issue doesn’t exist on older versions of macOS you might want to just enable this
+for Tahoe:
+
+```
+if #available(macOS 26.0, *) {
+    refreshControl.masksToSafeArea = true
+}
+```
+
 ## Requirements
 
 - macOS 13+

@@ -43,6 +43,8 @@ open class RefreshControl: NSControl {
         return self.frame.size.height
     }
 
+    public var masksToSafeArea: Bool = false
+
     public var canRefresh: Bool {
         if !self.didBeginScrollNearToTop {
             return false
@@ -180,15 +182,6 @@ open class RefreshControl: NSControl {
         }
     }
 
-    @objc private func didStartScrolling(_ notification: Notification) {
-        guard let scrollView = self.enclosingScrollView else {
-            return
-        }
-
-        let offset = scrollView.documentVisibleRect.minY - -scrollView.contentInsets.top
-        self.didBeginScrollNearToTop = offset < (scrollView.contentSize.height / 3)
-    }
-
     private func lockControlIfFullyRevealed() {
         guard let distanceFromSafeArea = self.distanceFromSafeArea else {
             return
@@ -218,7 +211,50 @@ open class RefreshControl: NSControl {
         }
     }
 
+    private func updateClippingMask() {
+        guard let scrollView = self.enclosingScrollView else {
+            return
+        }
+
+        guard self.masksToSafeArea else {
+            self.layer?.mask = nil
+            return
+        }
+
+        self.wantsLayer = true
+
+        let mask = self.layer?.mask ?? CALayer()
+        mask.backgroundColor = NSColor.black.cgColor
+        self.layer?.mask = mask
+
+        let refreshControlFrameInScrollView = self.convert(self.bounds, to: scrollView)
+
+        let visibleTop = max(refreshControlFrameInScrollView.minY, scrollView.safeAreaInsets.top)
+        let visibleHeight = max(0, refreshControlFrameInScrollView.maxY - visibleTop)
+        let maskY = visibleTop - refreshControlFrameInScrollView.minY
+
+        mask.frame = CGRect(
+            x: 0,
+            y: maskY,
+            width: self.bounds.width,
+            height: visibleHeight
+        )
+    }
+
+    @objc private func didStartScrolling(_ notification: Notification) {
+        guard let scrollView = self.enclosingScrollView else {
+            return
+        }
+
+        self.updateClippingMask()
+
+        let offset = scrollView.documentVisibleRect.minY - -scrollView.contentInsets.top
+        self.didBeginScrollNearToTop = offset < (scrollView.contentSize.height / 3)
+    }
+
     @objc private func clipViewBoundsChanged(_ notification: Notification) {
+        self.updateClippingMask()
+
         guard let scrollView = self.enclosingScrollView else {
             return
         }

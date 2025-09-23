@@ -40,6 +40,9 @@ class ViewController: NSViewController {
         scrollView.documentView = self.collectionView
 
         let refreshControl = ProgressIndicatorRefreshControl(target: self, action: #selector(refreshControlInvoked(_:)))
+        if #available(macOS 26.0, *) {
+            refreshControl.masksToSafeArea = true
+        }
         scrollView.refreshControl = refreshControl
 
         self.setupCollectionView()
