@@ -27,7 +27,6 @@ open class RefreshControl: NSControl {
     }
 
     private var previousScrollViewOffset: CGPoint = .zero
-    private var restorableContentInsets: NSEdgeInsets?
     private var didBeginScrollNearToTop: Bool = true
     private var lastDeactivationTime: Date?
 
@@ -52,8 +51,7 @@ open class RefreshControl: NSControl {
             switch self.state {
             case .activated:
                 if !previousState.isActivated {
-                    self.restorableContentInsets = scrollView.contentInsets
-                    scrollView.contentInsets.top += self.frame.size.height
+                    scrollView.contentInsets.top += self.height
                     self.stateDidChange(from: previousState, to: self.state)
                 }
             case .deactivating:
@@ -72,6 +70,10 @@ open class RefreshControl: NSControl {
 
     public var isRefreshing: Bool {
         return if case .activated = self.state { true } else { false }
+    }
+
+    var height: CGFloat {
+        return self.frame.size.height
     }
 
     deinit {
@@ -142,17 +144,16 @@ open class RefreshControl: NSControl {
     }
 
     private func completeDeactivation() {
-        if let resetContentInsets = self.restorableContentInsets, let scrollView = self.enclosingScrollView {
-            let diff = scrollView.contentInsets.top - resetContentInsets.top
+        if let scrollView = self.enclosingScrollView {
+            let diff = scrollView.contentInsets.top - scrollView.safeAreaInsets.top
             var adjustedScrollOrigin = scrollView.contentView.bounds.origin
             adjustedScrollOrigin.y -= diff
 
-            scrollView.contentInsets = resetContentInsets
+            scrollView.contentInsets = scrollView.safeAreaInsets
             scrollView.contentView.setBoundsOrigin(adjustedScrollOrigin)
             scrollView.reflectScrolledClipView(scrollView.contentView)
 
             self.previousScrollViewOffset.y = 0
-            self.restorableContentInsets = nil
         }
 
         self.state = .idle
@@ -177,7 +178,7 @@ open class RefreshControl: NSControl {
             return
         }
 
-        let refreshViewHeight = self.frame.size.height
+        let refreshViewHeight = self.height
         let offset = self.previousScrollViewOffset.y + scrollView.contentInsets.top
 
         switch offset {

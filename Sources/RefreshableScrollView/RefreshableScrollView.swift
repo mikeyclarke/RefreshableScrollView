@@ -1,6 +1,8 @@
 import AppKit
 
 open class RefreshableScrollView: NSScrollView {
+    private var cachedSafeAreaInsets: NSEdgeInsets?
+
     private lazy var unsafeAreaLayoutGuide: NSLayoutGuide = {
         let unsafeAreaLayoutGuide = NSLayoutGuide()
         self.contentView.addLayoutGuide(unsafeAreaLayoutGuide)
@@ -20,8 +22,12 @@ open class RefreshableScrollView: NSScrollView {
             oldValue?.removeFromSuperview()
 
             guard let refreshControl = self.refreshControl else {
+                self.automaticallyAdjustsContentInsets = true
+                self.cachedSafeAreaInsets = nil
                 return
             }
+
+            self.automaticallyAdjustsContentInsets = false
 
             refreshControl.translatesAutoresizingMaskIntoConstraints = false
             self.contentView.addSubview(refreshControl)
@@ -38,5 +44,42 @@ open class RefreshableScrollView: NSScrollView {
 
             NSLayoutConstraint.activate(constraints)
         }
+    }
+
+    open override func layout() {
+        super.layout()
+
+        self.updateContentInsets()
+    }
+
+    private func updateContentInsets() {
+        guard
+            !self.automaticallyAdjustsContentInsets,
+            !self.safeAreaInsets.isEqual(to: self.cachedSafeAreaInsets)
+        else {
+            return
+        }
+
+        var adjustedInsets = self.safeAreaInsets
+        if let control = self.refreshControl, control.isRefreshing {
+            adjustedInsets.top += control.height
+        }
+        self.contentInsets = adjustedInsets
+
+        self.cachedSafeAreaInsets = self.safeAreaInsets
+    }
+}
+
+private extension NSEdgeInsets {
+    func isEqual(to other: NSEdgeInsets?) -> Bool {
+        guard let other else {
+            return false
+        }
+
+        return
+            self.top == other.top &&
+            self.left == other.left &&
+            self.bottom == other.bottom &&
+            self.right == other.right
     }
 }
