@@ -129,6 +129,7 @@ open class RefreshControl: NSControl {
             return
         }
 
+        self.updateClippingMask()
         self.state = .activated
 
         if lockControl {
